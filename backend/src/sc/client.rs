@@ -421,6 +421,7 @@ impl ScClient {
 
     /// Generic apiv2 GET via the relay (`sc.apiv2_get`). Returns the RAW apiv2 body
     /// (`data`), or None to fall back.
+    #[allow(dead_code)]
     pub async fn apiv2_get_via_relay(&self, url: &str) -> Option<Value> {
         self.apiv2_get_via_relay_rotated(url, 0).await
     }
