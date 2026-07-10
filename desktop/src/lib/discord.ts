@@ -8,14 +8,15 @@ import { getArtistDisplay, getDisplayTitle } from './track-display';
 let connected = false;
 let lastConnectAttemptAt = 0;
 const CONNECT_RETRY_MS = 5000;
+let discordPresenceRequestId = 0;
 
-async function ensureConnected(): Promise<boolean> {
+async function ensureConnected(force = false): Promise<boolean> {
   if (!useSettingsStore.getState().discordRpcEnabled) {
     return false;
   }
   if (connected) return true;
   const now = Date.now();
-  if (now - lastConnectAttemptAt < CONNECT_RETRY_MS) {
+  if (!force && now - lastConnectAttemptAt < CONNECT_RETRY_MS) {
     return false;
   }
   lastConnectAttemptAt = now;
@@ -33,7 +34,9 @@ function artworkToLarge(url: string | null): string | undefined {
 }
 
 async function updatePresence(track: Track) {
+  const requestId = ++discordPresenceRequestId;
   if (!(await ensureConnected())) return;
+  if (requestId !== discordPresenceRequestId) return;
 
   try {
     const isPlaying = usePlayerStore.getState().isPlaying;
@@ -59,7 +62,10 @@ async function updatePresence(track: Track) {
 }
 
 async function clearPresence() {
+  const requestId = ++discordPresenceRequestId;
   if (!connected) return;
+  if (requestId !== discordPresenceRequestId) return;
+
   try {
     await invoke('discord_clear_activity');
   } catch {
